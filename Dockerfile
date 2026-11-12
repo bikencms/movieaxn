@@ -25,28 +25,33 @@ RUN apt-get update && apt-get install -y \
 # Clear cache apt
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Cài đặt PHP extensions cho MySQL
+# Cài đặt PHP extensions cho MySQL và GD
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mysqli zip gd
 
 # Cài đặt Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Copy composer files trước để tối ưu cache
+# Copy composer files trước để tối ưu Docker Layer Caching
 COPY composer.lock composer.json /var/www/
 
-# Cài đặt các gói PHP (bỏ qua dev)
+# Cài đặt các gói PHP (bỏ qua dev, tối ưu autoloader)
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Copy toàn bộ mã nguồn vào container
 COPY . /var/www
 
-# Cấp quyền cho storage và bootstrap/cache
+# Chạy composer scripts nếu có
+RUN composer run-post-install-cmds || true
+
+# Cấp quyền cho thư mục storage và bootstrap/cache
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Tạo script khởi động (entrypoint) để chạy cả Redis và Laravel Artisan cùng lúc
+# Tạo script khởi động (entrypoint) để chạy đồng thời Redis và Laravel Artisan
 RUN echo '#!/bin/sh' > /start.sh \
     && echo 'redis-server --daemonize yes' >> /start.sh \
+    && echo 'php artisan config:cache' >> /start.sh \
+    && echo 'php artisan route:cache' >> /start.sh \
     && echo 'php artisan serve --host=0.0.0.0 --port=${PORT:-8000}' >> /start.sh \
     && chmod +x /start.sh
 
