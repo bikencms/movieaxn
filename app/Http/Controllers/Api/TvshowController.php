@@ -43,17 +43,19 @@ class TvshowController extends Controller
             $data = Cache::get('tv_show_first_'.$type);
         } else {
             $select = "SELECT p.ID, p.post_title, p.original_title, p.post_content, p.post_date_gmt, p.post_date, p.post_modified FROM wp_posts p ";
-            $where = " WHERE  ((p.post_type = 'tv_show' AND (p.post_status = 'publish'))) ";
+            $where = " WHERE ((p.post_type = 'tv_show' AND (p.post_status = 'publish'))) ";
+
             if( $title != '' ) {
                 $s_rp = str_replace(" ","", $title);
-                $whereTitle = " AND ( p.post_title LIKE '%".$title."%' OR  
-                REPLACE(p.post_title, ' ', '') like '%".$s_rp."%' OR
+                // Chú ý thêm khoảng trắng trước chữ AND
+                $whereTitle = " AND (p.post_title LIKE '%".$title."%' OR 
+                REPLACE(p.post_title, ' ', '') LIKE '%".$s_rp."%' OR
                 p.original_title LIKE '%".$title."%' OR
-                REPLACE(p.original_title, ' ', '') like '%".$s_rp."%'
+                REPLACE(p.original_title, ' ', '') LIKE '%".$s_rp."%'
                 ) ";
-                $where = $where . $whereTitle;
+                $where .= $whereTitle;
             }
-    
+
             if( $type != '' ) {
                 $categoryTvShowKorea = config('constants.categoryTvshowKoreas');
                 if( in_array($type, $categoryTvShowKorea) ) {
@@ -62,46 +64,50 @@ class TvshowController extends Controller
                                 LEFT JOIN wp_term_taxonomy wt ON t.term_id = wt.term_id
                                 LEFT JOIN wp_term_relationships wr ON wr.term_taxonomy_id = wt.term_taxonomy_id
                                 WHERE slug = '". $type ."'";
+                    // Thêm khoảng trắng trước chữ AND
                     $whereType = " AND p.ID IN ( ". $idType ." ) ";
                 } else {
-                    $whereType = $this->tvshowService->getWhereByType($type);
+                    $whereType = " " . $this->tvshowService->getWhereByType($type);
                 }
-                $where = $where . $whereType;
+                $where .= $whereType;
             }
+
             if( $genre != '' ) {
-                $genre = explode(',', $genre);
-                foreach($genre as $key => $g) {
-                    $genre[$key] = "'" . "$g" . "'";
-                }
-                $genre = join(",", $genre);
-    
+                $genreArray = explode(',', $genre);
+                $escapedGenres = array_map(function($g) {
+                    return "'" . addslashes(trim($g)) . "'";
+                }, $genreArray);
+                $genreString = join(",", $escapedGenres);
+
                 $queryGenre = "SELECT tr.object_id FROM wp_terms t
-                    left join wp_term_taxonomy tx on tx.term_id = t.term_id
-                    left join wp_term_relationships tr on tr.term_taxonomy_id = tx.term_taxonomy_id
-                    WHERE t.slug IN (". $genre .") OR t.name IN (". $genre .")";
-                $where = $where . "AND p.ID IN ( ". $queryGenre ." ) ";    
+                    LEFT JOIN wp_term_taxonomy tx ON tx.term_id = t.term_id
+                    LEFT JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tx.term_taxonomy_id
+                    WHERE t.slug IN (". $genreString .") OR t.name IN (". $genreString .")";
+                
+                // Thêm khoảng trắng trước chữ AND
+                $where .= " AND p.ID IN ( ". $queryGenre ." ) ";    
             }
-    
+
+            $selectRating = "";
             if( $orderBy == '' ) {
-                $order = "ORDER BY p.post_date DESC ";
+                $order = " ORDER BY p.post_date DESC ";
             } else if( $orderBy == 'titleAsc' ) {
-                $order = "ORDER BY p.post_title ASC ";
-             }else if( $orderBy == 'titleDesc' ) {
-                $order = "ORDER BY p.post_title DESC ";
-            } else if($orderBy == 'date' ) {
-                $order = "ORDER BY p.post_date DESC ";
-            } else if($orderBy == 'rating') {
-                $selectRating = "LEFT JOIN wp_most_popular mp ON mp.post_id = p.ID ";
-                $select = $select . $selectRating;
-                $order = "ORDER BY mp.all_time_stats DESC ";
-            } else if($orderBy == 'menuOrder') {
-                $order = "ORDER BY p.menu_order DESC ";
+                $order = " ORDER BY p.post_title ASC ";
+            } else if( $orderBy == 'titleDesc' ) {
+                $order = " ORDER BY p.post_title DESC ";
+            } else if( $orderBy == 'date' ) {
+                $order = " ORDER BY p.post_date DESC ";
+            } else if( $orderBy == 'rating') {
+                $selectRating = " LEFT JOIN wp_most_popular mp ON mp.post_id = p.ID ";
+                $order = " ORDER BY mp.all_time_stats DESC ";
+            } else if( $orderBy == 'menuOrder' ) {
+                $order = " ORDER BY p.menu_order DESC ";
             } else {
-                $order = "ORDER BY p.post_date DESC ";
+                $order = " ORDER BY p.post_date DESC ";
             }
-    
-            //query all tvshow
-            $query = $select . $where . $order;
+
+            // Gộp câu lệnh hoàn chỉnh
+            $query = $select . $selectRating . $where . $order;
     
             $selectTotal = "SELECT COUNT(1) as total FROM wp_posts p ";
             $queryTotal = $selectTotal . $where;
