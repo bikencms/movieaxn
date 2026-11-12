@@ -3,7 +3,7 @@ FROM php:8.2-fpm
 # Set working directory
 WORKDIR /var/www
 
-# Install dependencies cần thiết
+# Cài đặt các gói hệ thống, PHP extensions và Redis Server
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpng-dev \
@@ -18,13 +18,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     libzip-dev \
     libmemcached-dev libssl-dev zlib1g-dev \
+    redis-server \
     && pecl install memcached-3.2.0 \
     && docker-php-ext-enable memcached
 
-# Clear cache
+# Clear cache apt
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Cài đặt extension PHP cho MySQL
+# Cài đặt PHP extensions cho MySQL
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mysqli zip gd
 
@@ -43,8 +44,14 @@ COPY . /var/www
 # Cấp quyền cho storage và bootstrap/cache
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Khai báo cổng cho Render (Render sẽ tự map cổng qua biến môi trường $PORT)
+# Tạo script khởi động (entrypoint) để chạy cả Redis và Laravel Artisan cùng lúc
+RUN echo '#!/bin/sh' > /start.sh \
+    && echo 'redis-server --daemonize yes' >> /start.sh \
+    && echo 'php artisan serve --host=0.0.0.0 --port=${PORT:-8000}' >> /start.sh \
+    && chmod +x /start.sh
+
+# Khai báo cổng cho Render
 EXPOSE 8000
 
-# Chạy server Artisan kèm port của Render
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Chạy file script khi container khởi động
+CMD ["/start.sh"]
