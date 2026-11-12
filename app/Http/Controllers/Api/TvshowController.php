@@ -367,7 +367,7 @@ class TvshowController extends Controller
 
                 $queryTitle = $selectTitleEpisode . $whereTitleEpisode . $whereTitleSub;
                 $dataEpisoTitle = DB::select($queryTitle);
-                
+                $episodeName = "";
                 if( count($dataEpisoTitle) > 0 ) {
                     $link = 'episode/' . $dataEpisoTitle[0]->post_title;
                     $episodeName = $dataEpisoTitle[0]->post_name;

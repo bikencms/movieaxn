@@ -108,23 +108,43 @@ class MovieController extends Controller
             } else {
                 $queryByType =  " AND t.slug IN (" . $genre . ") " ;
             }
-            $queryTopWeek = "SELECT DISTINCT(p.ID) as id, p.post_name as slug, p.post_title as title, p.post_type, p.post_status FROM `wp_most_popular` mp
-            LEFT JOIN wp_term_relationships tr ON tr.object_id = mp.post_id
-            LEFT JOIN wp_term_taxonomy tx on tr.term_taxonomy_id = tx.term_taxonomy_id
-            LEFT JOIN wp_terms t ON t.term_id = tx.term_id
-            LEFT JOIN wp_posts p ON p.ID = mp.post_id
-            WHERE p.post_type = 'movie' AND p.post_title != '' AND mp.post_id != '' AND p.ID != '' " . $queryByType . " AND (p.post_status = 'publish')
-            ORDER BY mp.7_day_stats DESC
-            LIMIT 5";
+            $queryTopWeek = "SELECT DISTINCT(p.ID) as id, 
+                p.post_name as slug, 
+                p.post_title as title, 
+                p.post_type, 
+                p.post_status, 
+                mp.`7_day_stats` -- Thêm cột này vào SELECT và bọc backtick vì bắt đầu bằng số
+            FROM `wp_most_popular` mp            
+            LEFT JOIN wp_term_relationships tr ON tr.object_id = mp.post_id            
+            LEFT JOIN wp_term_taxonomy tx on tr.term_taxonomy_id = tx.term_taxonomy_id            
+            LEFT JOIN wp_terms t ON t.term_id = tx.term_id            
+            LEFT JOIN wp_posts p ON p.ID = mp.post_id            
+            WHERE p.post_type = 'movie' 
+            AND p.post_title != '' 
+            AND mp.post_id != '' 
+            AND p.ID != ''  
+            AND (p.post_status = 'publish')            
+            ORDER BY mp.`7_day_stats` DESC            
+            LIMIT 5;";
 
-            $queryPopular = "SELECT DISTINCT(p.ID) as id, p.post_name as slug, p.post_title as title, p.post_type, p.post_status FROM `wp_most_popular` mp
-            LEFT JOIN wp_term_relationships tr ON tr.object_id = mp.post_id
-            LEFT JOIN wp_term_taxonomy tx on tr.term_taxonomy_id = tx.term_taxonomy_id
-            LEFT JOIN wp_terms t ON t.term_id = tx.term_id
-            LEFT JOIN wp_posts p ON p.ID = mp.post_id
-            WHERE p.post_type = 'movie' AND p.post_title != '' AND mp.post_id != '' AND p.ID != '' " . $queryByType . " AND (p.post_status = 'publish')
-            ORDER BY mp.1_day_stats DESC
-            LIMIT 6";
+            $queryPopular = "SELECT DISTINCT(p.ID) as id, 
+                p.post_name as slug, 
+                p.post_title as title, 
+                p.post_type, 
+                p.post_status, 
+                mp.`1_day_stats` -- Thêm cột này vào SELECT và bọc backtick vì bắt đầu bằng số
+            FROM `wp_most_popular` mp            
+            LEFT JOIN wp_term_relationships tr ON tr.object_id = mp.post_id            
+            LEFT JOIN wp_term_taxonomy tx on tr.term_taxonomy_id = tx.term_taxonomy_id            
+            LEFT JOIN wp_terms t ON t.term_id = tx.term_id            
+            LEFT JOIN wp_posts p ON p.ID = mp.post_id            
+            WHERE p.post_type = 'movie' 
+            AND p.post_title != '' 
+            AND mp.post_id != '' 
+            AND p.ID != ''  
+            AND (p.post_status = 'publish')            
+            ORDER BY mp.`1_day_stats` DESC            
+            LIMIT 6;";
             
             $populars = DB::select($queryPopular);
             $topWeeks = DB::select($queryTopWeek);
@@ -150,18 +170,18 @@ class MovieController extends Controller
                 foreach ($items as &$item) {
                     $item = \get_object_vars($item);
                     $item['genres'] = $genres[(int) $item['id']] ?? [];
-                    $item += $metaData[(int) $item['id']];
+                    $item += isset($metaData[(int) $item['id']]) ? $metaData[(int) $item['id']] : [];
                 }
                 foreach ($populars as &$item) {
                     $item = \get_object_vars($item);
                     $item['genres'] = $genres[(int) $item['id']] ?? [];
-                    $item += $metaData[(int) $item['id']];
+                    $item += isset($metaData[(int) $item['id']]) ? $metaData[(int) $item['id']] : [];
                 }
 
                 foreach ($topWeeks as &$item) {
                     $item = \get_object_vars($item);
                     $item['genres'] = $genres[(int) $item['id']] ?? [];
-                    $item += $metaDataTopWeeks[(int) $item['id']];
+                    $item += isset($metaDataTopWeeks[(int) $item['id']]) ? $metaDataTopWeeks[(int) $item['id']] : [];
                 }
             }
             $data = [

@@ -60,14 +60,26 @@ class TvshowService {
         } else {
             $queryByType =  "AND (t.slug = '" . $type . "' OR t.name = '" . $type . "'   )" ;
         }
-        $queryTopWeek = "SELECT DISTINCT(p.ID) as get_not_exist, p.ID, p.post_title, p.original_title, p.post_content, p.post_date_gmt, p.post_date, mp.7_day_stats, p.post_status FROM wp_posts p
-                        LEFT JOIN wp_most_popular mp ON p.ID = mp.post_id
-                        LEFT JOIN wp_term_relationships tr ON tr.object_id = mp.post_id
-                        LEFT JOIN wp_term_taxonomy tx on tr.term_taxonomy_id = tx.term_taxonomy_id
-                        LEFT JOIN wp_terms t ON t.term_id = tx.term_id
-                        WHERE p.post_type = 'tv_show' " . $queryByType . " AND (p.post_status = 'publish')
-                        ORDER BY mp.1_day_stats DESC
-                        LIMIT 5;";
+        $queryTopWeek = "SELECT 
+            DISTINCT(p.ID) as get_not_exist,  
+            p.ID,
+            p.post_title,
+            p.original_title,
+            p.post_content,
+            p.post_date_gmt,
+            p.post_date,  
+            mp.7_day_stats,  
+            p.post_status,
+            mp.1_day_stats -- Thêm dòng này vào đây
+            FROM wp_posts p  
+            LEFT JOIN wp_most_popular mp ON p.ID = mp.post_id  
+            LEFT JOIN wp_term_relationships tr ON tr.object_id = mp.post_id  
+            LEFT JOIN wp_term_taxonomy tx ON tr.term_taxonomy_id = tx.term_taxonomy_id  
+            LEFT JOIN wp_terms t ON t.term_id = tx.term_id
+            WHERE p.post_type = 'tv_show'  
+            AND p.post_status = 'publish'
+            ORDER BY mp.1_day_stats DESC
+            LIMIT 5;";
         return $this->getItems($queryTopWeek, $type);
     }
 
@@ -92,13 +104,13 @@ class TvshowService {
             $queryEpisode = "SELECT meta_key, meta_value, post_id FROM `wp_postmeta` WHERE meta_key = '_seasons' AND post_id =". $dataItem->ID . " LIMIT 1;";
             $dataEpisode = DB::select($queryEpisode);
             
-            $episodeData = $dataEpisode[0]->meta_value;
+            $episodeData = isset($dataEpisode[0]) ? $dataEpisode[0]->meta_value : '';
             $episodeData = unserialize($episodeData);
 
-            $lastSeason = end($episodeData);
-            $seasonNumber = $lastSeason['name'];      
+            $lastSeason = is_array($episodeData) ? end($episodeData) : [];
+            $seasonNumber = count($lastSeason) > 0 ? $lastSeason['name'] : '';      
 
-            $episodeId = end($lastSeason['episodes']);
+            $episodeId = is_array($episodeData) ?  end($lastSeason['episodes']) : 0;
             $queryMeta = "SELECT meta_key, meta_value FROM wp_postmeta WHERE post_id = ". $episodeId .";";
 
             $querySrcMeta = "SELECT am.meta_value FROM wp_posts p LEFT JOIN wp_postmeta pm ON pm.post_id = p.ID AND pm.meta_key = '_thumbnail_id' 
