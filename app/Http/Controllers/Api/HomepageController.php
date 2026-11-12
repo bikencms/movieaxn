@@ -130,13 +130,13 @@ class HomepageController extends Controller
             foreach ($movies as &$item) {
                 $item = \get_object_vars($item);
                 $item['genres'] = $genres[(int) $item['id']] ?? [];
-                $item += $moviesMetadata[(int) $item['id']];
+                $item += isset($moviesMetadata[(int) $item['id']]) ? $moviesMetadata[(int) $item['id']] : [];
             }
 
             foreach ($movieKoreas as &$item) {
                 $item = \get_object_vars($item);
                 $item['genres'] = $genres[(int) $item['id']] ?? [];
-                $item += $moviesMetadata[(int) $item['id']];
+                $item += isset($moviesMetadata[(int) $item['id']]) ? $moviesMetadata[(int) $item['id']] : [];
             }
             
             foreach ($topWeeks as &$item) {
