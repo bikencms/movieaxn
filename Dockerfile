@@ -1,12 +1,9 @@
 FROM php:8.2-fpm
 
-# Copy composer.lock and composer.json
-COPY composer.lock composer.json /var/www/
-
 # Set working directory
 WORKDIR /var/www
 
-# Install dependencies
+# Install dependencies cần thiết
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpng-dev \
@@ -27,24 +24,27 @@ RUN apt-get update && apt-get install -y \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql zip 
+# Cài đặt extension PHP cho MySQL
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mysqli zip gd
 
-# Install composer
+# Cài đặt Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Add user for laravel application
-RUN groupadd -g 1000 www
-RUN useradd -u 1000 -ms /bin/bash -g www www
+# Copy composer files trước để tối ưu cache
+COPY composer.lock composer.json /var/www/
 
-# Copy existing application directory contents
+# Cài đặt các gói PHP (bỏ qua dev)
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# Copy toàn bộ mã nguồn vào container
 COPY . /var/www
 
-# Copy existing application directory permissions
-COPY --chown=www:www . /var/www
+# Cấp quyền cho storage và bootstrap/cache
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Change current user to www
-USER www
+# Khai báo cổng cho Render (Render sẽ tự map cổng qua biến môi trường $PORT)
+EXPOSE 8000
 
-# Expose port 9000 and start php-fpm server
-# EXPOSE 9000
-# CMD ["php-fpm"]
+# Chạy server Artisan kèm port của Render
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
