@@ -16,7 +16,7 @@ class TvshowController extends Controller
     protected $helperService;
     public function __construct(TvshowService $tvshowService, HelperService $helperService)
     {
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
         $this->tvshowService = $tvshowService;
         $this->helperService = $helperService;
     }
@@ -438,7 +438,7 @@ class TvshowController extends Controller
     }
 
     public function getPathFromUploads($url) {
-        $pos = strpos($url, '/uploads/');
+        $pos = strpos($url, '/uploads//');
         if ($pos !== false) {
             return substr($url, $pos);
         }

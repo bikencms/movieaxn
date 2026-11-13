@@ -13,7 +13,7 @@ class TvshowService {
     public function __construct(HelperService $helperService)
     {
         $this->helperService = $helperService;
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
     }
     public function getTopWeeks($type='')
     {
@@ -87,7 +87,7 @@ class TvshowService {
         $items = [];
         $dataItems = DB::select($query);
         $releaseDate = date('Y-M-D');
-        $imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
         $link = '';
         $srcSet = [];
         $src= '';
@@ -321,8 +321,12 @@ class TvshowService {
         
         $randomSlider[0] = [ 'title' => '오늘의 한국 넷플릭스 순위', 'query' => $queryKoreaSlider ];
         $randomSlider[1] = [ 'title' => '오늘의 미국 넷플릭스 순위', 'query' => $queryUsaSlider ];
-        $queryRandom = $randomSlider[rand(0,1)];
-        return $this->getSliderRandomItems($queryRandom);
+        $index = rand(0,1);
+        $queryRandom = $randomSlider[$index];
+        // Cache each variant (N+1 queries inside) so only random pick happens per request
+        return Cache::remember('tvshow_random_slider_' . $index, 600, function () use ($queryRandom) {
+            return $this->getSliderRandomItems($queryRandom);
+        });
         //return $this->helperService->getSliderItems($queryRandom);
     }
 
@@ -446,7 +450,7 @@ class TvshowService {
     }
 
     public function getPathFromUploads($url) {
-        $pos = strpos($url, '/uploads/');
+        $pos = strpos($url, '/uploads//');
         if ($pos !== false) {
             return substr($url, $pos);
         }

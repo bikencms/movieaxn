@@ -17,7 +17,7 @@ class EpisodeController extends Controller
     protected $helperService;
     public function __construct(TvshowService $tvshowService, HelperService $helperService)
     {
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
         $this->tvshowService = $tvshowService;
         $this->helperService = $helperService;
     }
@@ -68,7 +68,7 @@ class EpisodeController extends Controller
             $title = $request->get('title', '');
             $newTitle = urlencode($title);
     
-            $imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+            $imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
     
             $select = "SELECT p.ID, p.post_title, p.post_name, p.original_title, p.post_content, p.post_date_gmt, p.post_date FROM wp_posts p ";
             $where = " WHERE  ((p.post_type = 'episode' AND (p.post_status = 'publish'))) ";

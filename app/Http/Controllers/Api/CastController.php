@@ -25,7 +25,7 @@ class CastController extends Controller
     protected $searchService;
     public function __construct(HelperService $helperService, MovieService $movieService, TvshowService $tvshowService, SearchService $searchService)
     {
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads//');
         $this->helperService = $helperService;
         $this->movieService = $movieService;
         $this->tvshowService = $tvshowService;

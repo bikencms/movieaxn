@@ -20,7 +20,7 @@ class MovieController extends Controller
     {
         $this->movieService = $movieService;
         $this->helperService = $helperService;        
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
     }
     /**
      * Display a listing of the resource.

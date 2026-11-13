@@ -327,7 +327,7 @@ class SearchService {
     }
 
     public function getPathFromUploads($url) {
-        $pos = strpos($url, '/uploads/');
+        $pos = strpos($url, '/uploads//');
         if ($pos !== false) {
             return substr($url, $pos);
         }

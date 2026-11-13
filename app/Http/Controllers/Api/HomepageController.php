@@ -32,7 +32,7 @@ class HomepageController extends Controller
         $this->tvshowService = $tvshowService;
         $this->searchService = $searchService;
         $this->helperService = $helperService;
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
     }
 
     /**
