@@ -324,7 +324,7 @@ class TvshowService {
         $index = rand(0,1);
         $queryRandom = $randomSlider[$index];
         // Cache each variant (N+1 queries inside) so only random pick happens per request
-        return Cache::remember('tvshow_random_slider_' . $index, 600, function () use ($queryRandom) {
+        return Cache::rememberForever('tvshow_random_slider_' . $index, function () use ($queryRandom) {
             return $this->getSliderRandomItems($queryRandom);
         });
         //return $this->helperService->getSliderItems($queryRandom);
