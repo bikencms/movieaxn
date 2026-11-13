@@ -34,7 +34,7 @@ class CastController extends Controller
 
     public function index(Request $request) {
         $page = $request->get('page', 1);
-        $perPage = $request->get('limit', env('PAGE_LIMIT'));
+        $perPage = $request->get('limit', env('PAGE_LIMIT', 30));
         $orderBy = $request->get('orderBy', '');
         $search = $request->get('search', '');
 
@@ -298,7 +298,7 @@ class CastController extends Controller
             //sorting items
             $page = $request->get('page', '1');
             $orderBy = $request->get('orderBy', '');
-            $perPage = $request->get('limit', env('PAGE_LIMIT'));
+            $perPage = $request->get('limit', env('PAGE_LIMIT', 30));
 
             $ids = join(",", $ids);
             

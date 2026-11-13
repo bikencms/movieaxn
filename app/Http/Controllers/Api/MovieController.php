@@ -30,9 +30,9 @@ class MovieController extends Controller
     public function index(Request $request)
     {
         $page = $request->get('page', 1);
-        $perPage = $request->get('limit', env('PAGE_LIMIT'));
-        if( $perPage > env('PAGE_LIMIT') ) {
-            $perPage = env('PAGE_LIMIT');
+        $perPage = $request->get('limit', env('PAGE_LIMIT', 30));
+        if( $perPage > env('PAGE_LIMIT', 30) ) {
+            $perPage = env('PAGE_LIMIT', 30);
         }
         $releaseYear = $request->get('year', '');
         $genre = $request->get('genre', '');

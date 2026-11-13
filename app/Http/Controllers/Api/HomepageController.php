@@ -175,7 +175,7 @@ class HomepageController extends Controller
     public function search(Request $request) {
         $title = $request->get('title', '');
         $page = $request->get('page', 1);
-        $perPage = $request->get('limit', env('PAGE_LIMIT'));
+        $perPage = $request->get('limit', env('PAGE_LIMIT', 30));
         $orderBy = $request->get('orderBy', 'date');
 
         $titleNoWhitespace = \str_replace(' ', '', $title);
