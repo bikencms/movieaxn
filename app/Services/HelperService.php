@@ -210,20 +210,55 @@ class HelperService {
             ], 500);
         }
 
-        // Tiến hành gọi API an toàn
-        $response = Http::timeout(3)->get($outlink, [
-            'key' => 123456, 
-            'post_id' => $postId 
-        ]);
-        if( $response->ok() ) {
-            return json_decode($response);
+        // Đường dẫn tuyệt đối đến file JSON trên ổ đĩa server
+        $jsonFilePath = public_path("outlink/json/post_{$postId}.json");
+        $data = null;
+
+        if (file_exists($jsonFilePath)) {
+            // Đọc trực tiếp nội dung file JSON
+            $jsonData = file_get_contents($jsonFilePath);
+            if ($jsonData !== false) {
+                // Decode dạng mảng (associative array)
+                $data = json_decode($jsonData, true);
+            }
+        } 
+
+        // Nếu file chưa tồn tại hoặc đọc file bị lỗi / rỗng
+        if (empty($data)) {
+            $directory = dirname($jsonFilePath);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            
+            // Tạo cấu trúc dữ liệu mặc định của bạn ở đây
+            $payloadArray = [
+                'key' => 123456, 
+                'post_id' => $postId,
+                'status' => 'success'
+                // Thêm các dữ liệu cần thiết khác vào đây nếu muốn query từ DB
+            ];
+            
+            $payloadJson = json_encode($payloadArray, JSON_UNESCAPED_UNICODE);
+            file_put_contents($jsonFilePath, $payloadJson);
+            
+            $data = $payloadArray;
+        }
+
+        // Trả về kết quả
+        if (!empty($data)) {
+            // Trả về trực tiếp mảng dưới dạng object hoặc json response tùy nhu cầu của bạn
+            return is_array($data) ? (object)$data : $data;
         } else {
-            // $text = $outlink . ' not working';
-            // Telegram::sendMessage([
-            //     'chat_id' => env('TELEGRAM_CHANNEL_ID', '5968853987'),
-            //     'parse_mode' => 'HTML',
-            //     'text' => $text
-            // ]);
+            // Kích hoạt lại cảnh báo Telegram nếu hoàn toàn không lấy được dữ liệu
+            /*
+            $text = "Outlink json for post ID {$postId} not working";
+            Telegram::sendMessage([
+                'chat_id' => env('TELEGRAM_CHANNEL_ID', '5968853987'),
+                'parse_mode' => 'HTML',
+                'text' => $text
+            ]);
+            */
+            
             return '';
         }
     }
