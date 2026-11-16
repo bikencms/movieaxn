@@ -24,15 +24,25 @@ if( isset($_REQUEST['key']) && $_REQUEST['key'] == '123456' && isset($_REQUEST['
 		$servername = "gateway01.us-west-2.prod.aws.tidbcloud.com";
 		$username = "4Qc9vdqMjkq5XGf.root";
 		$password = "tAV8f329ZvJ55VSu";
-#		$password = "drWzeIHB7r98zqxd";
 		$db = "axn";
-		$con = mysqli_connect($servername, $username, $password, $db, 4000);
-		if (mysqli_connect_errno()) {
-		  echo "Failed to connect to MySQL: " . mysqli_connect_error();
-		  exit();  
-		}
-		mysqli_set_charset( $con , "utf8" );
+		$port = 4000;
 
+		// 1. Khởi tạo mysqli
+		$con = mysqli_init();
+
+		// 2. Bắt buộc bật SSL cho kết nối TiDB Cloud
+		// (Tham số thứ 2, 3, 4, 5 lần lượt là: key, cert, ca, capath, cipher. Để null nếu dùng chứng chỉ mặc định của hệ thống)
+		mysqli_ssl_set($con, NULL, NULL, NULL, NULL, NULL);
+
+		// 3. Thiết lập tùy chọn kết nối an toàn (MYSQLI_CLIENT_SSL)
+		// Lưu ý: mysqli_real_connect dùng tham số thứ 5 là port thay vì vị trí như mysqli_connect cũ
+		if (!mysqli_real_connect($con, $servername, $username, $password, $db, $port, NULL, MYSQLI_CLIENT_SSL)) {
+			echo "Failed to connect to MySQL: " . mysqli_connect_error();
+			exit();
+		}
+
+		// 4. Thiết lập charset
+		mysqli_set_charset($con, "utf8");
 		// include(__DIR__.'/../wp-load.php');
 		// global $wpdb;
 		$post_id = $_REQUEST['post_id'];
@@ -65,13 +75,15 @@ if( isset($_REQUEST['key']) && $_REQUEST['key'] == '123456' && isset($_REQUEST['
 		        	$links[] = $k;
 		        }
 
+				$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+				$fullUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
 		        $title = $r->post_title;
 				$dt = json_encode(
 					array(
 						"title" => $title,
 						"link"  => $links,
-						"backlink" => "https://moviehqu.com/".$r->post_type."/".$r->post_name
+						"backlink" =>  $fullUrl . "/".$r->post_type."/".$r->post_name
 					)
 				);
 				  
@@ -112,9 +124,17 @@ if( isset($_REQUEST['key']) && $_REQUEST['key'] == '123456' && isset($_REQUEST['
 }else die("403 forbiden");
 
 function write_file_new_url($data,$link){
+		$directory = dirname($link); // Lấy đường dẫn thư mục chứa file (ví dụ: .../outlink/json)
+
+	// Kiểm tra nếu thư mục chưa tồn tại thì tự động tạo mới (recursive = true để tạo cả thư mục lồng nhau nếu cần)
+	if (!is_dir($directory)) {
+		mkdir($directory, 0755, true);
+	}
+
+	// Tiến hành mở file và ghi dữ liệu bình thường
 	$myfile = fopen($link, "w+") or die("Unable to open file!");
-    $txt = $data;
-    fwrite($myfile, $txt);
-    fclose($myfile);
+	$txt = $data;
+	fwrite($myfile, $txt);
+	fclose($myfile);
 }
-?>
+
