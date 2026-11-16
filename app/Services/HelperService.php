@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use App\Models\Post;
 use App\Models\PostMeta;
-use Telegram\Bot\Laravel\Facades\Telegram;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 class HelperService {
     protected $imageUrlUpload;
     public function __construct()
@@ -153,13 +154,24 @@ class HelperService {
 
     public function makeCacheFirst() {
 
+        try {
+            // Chạy các lệnh Artisan tương đương trên terminal
+            Artisan::call('cache:clear');     // Xóa application cache
+            Artisan::call('config:clear');    // Xóa config cache
+            Artisan::call('route:clear');     // Xóa route cache
+            Artisan::call('view:clear');      // Xóa compiled view cache
+        } catch (\Exception $e) {
+            // Ghi log lỗi nếu có sự cố xảy ra
+            Log::error('Clear cache failed: ' . $e->getMessage());
+        }
+
         //make cache front-end
-        $headers = [
-            "Content-Type" => "application/json",
-            "x-nuxt-multi-cache-token" => 'O5ilxqx5k1ZzFMjEVr'
-        ];
-        Http::withHeaders($headers)->post('http://localhost:3000/__nuxt_multi_cache/purge/all');
-        Http::get("http://localhost:3000/api/modified/");
+        // $headers = [
+        //     "Content-Type" => "application/json",
+        //     "x-nuxt-multi-cache-token" => 'O5ilxqx5k1ZzFMjEVr'
+        // ];
+        // Http::withHeaders($headers)->post('http://localhost:3000/__nuxt_multi_cache/purge/all');
+        // Http::get("http://localhost:3000/api/modified/");
 
         //make cache back-end
         // Http::get(route('homepage.index'));

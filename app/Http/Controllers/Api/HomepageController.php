@@ -271,6 +271,7 @@ class HomepageController extends Controller
     public function clearCache() {
         Artisan::call('cache:clear');
         $this->helperService->makeCacheFirst();
+        return "OK!";
     }
 
     public function clearCacheByKey($key='') {
