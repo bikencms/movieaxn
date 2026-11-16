@@ -211,7 +211,7 @@ class HelperService {
         }
 
         // Tiến hành gọi API an toàn
-        $response = Http::get($outlink, [
+        $response = Http::timeout(3)->get($outlink, [
             'key' => 123456, 
             'post_id' => $postId 
         ]);
