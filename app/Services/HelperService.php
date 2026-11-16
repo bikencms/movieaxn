@@ -196,18 +196,7 @@ class HelperService {
 
     public function getOutLink() {
         $outlink = env('OUTLINK', '');
-        $response = Http::get($outlink);
-        if( $response->ok() ) {
-            return $response;
-        } else {
-            // $text = $outlink . ' not working';
-            // Telegram::sendMessage([
-            //     'chat_id' => env('TELEGRAM_CHANNEL_ID', '5968853987'),
-            //     'parse_mode' => 'HTML',
-            //     'text' => $text
-            // ]);
-            return '';
-        }
+        return $outlink;
     }
 
     public function getKokoatvLink(int $postId) {

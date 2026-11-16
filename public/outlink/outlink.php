@@ -21,12 +21,12 @@ if( isset($_REQUEST['key']) && $_REQUEST['key'] == '123456' && isset($_REQUEST['
 
 	} 
 	if( !file_exists($fn) || ( file_exists($fn) && filesize($fn) > 0 )  ){
-		$servername = "localhost";
-		$username = "peekle";
-		$password = "gbR3IVfFtJyP5HFv";
+		$servername = "gateway01.us-west-2.prod.aws.tidbcloud.com";
+		$username = "4Qc9vdqMjkq5XGf.root";
+		$password = "tAV8f329ZvJ55VSu";
 #		$password = "drWzeIHB7r98zqxd";
-		$db = "peekle";
-		$con = mysqli_connect($servername, $username, $password, $db);
+		$db = "axn";
+		$con = mysqli_connect($servername, $username, $password, $db, 4000);
 		if (mysqli_connect_errno()) {
 		  echo "Failed to connect to MySQL: " . mysqli_connect_error();
 		  exit();  
