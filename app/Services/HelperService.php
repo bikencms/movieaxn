@@ -200,8 +200,21 @@ class HelperService {
     }
 
     public function getKokoatvLink(int $postId) {
-        $outlink = env('OUTLINKSTEP2', '');
-        $response = Http::get($outlink, [ 'key' => 123456, 'post_id' => $postId ]);
+        $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
+        // Kiểm tra xem biến có tồn tại và không rỗng không
+        if (empty($outlink)) {
+            // Xử lý lỗi hoặc trả về thông báo để dễ debug
+            return response()->json([
+                'success' => false,
+                'message' => 'Biến môi trường OUTLINKSTEP2 chưa được cấu hình trong file .env'
+            ], 500);
+        }
+
+        // Tiến hành gọi API an toàn
+        $response = Http::get($outlink, [
+            'key' => 123456, 
+            'post_id' => $postId 
+        ]);
         if( $response->ok() ) {
             return json_decode($response);
         } else {
