@@ -203,7 +203,20 @@ class HelperService {
         $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
         // Kiểm tra xem biến có tồn tại và không rỗng không
         if (!empty($outlink)) {
-           Http::get($outlink . '?key=123456&post_id='.$postId);
+            $url = $outlink . '?key=123456&post_id=' . $postId;
+            
+            // Khởi tạo cURL
+            $ch = curl_init($url);
+            
+            // Cấu hình các tùy chọn cho cURL
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Trả về kết quả thay vì in trực tiếp ra màn hình
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);          // Thời gian timeout (giây) để tránh bị treo request
+            
+            // Thực thi request
+            $response = curl_exec($ch);
+            
+            // Đóng kết nối cURL
+            curl_close($ch);
         }
 
         // Đường dẫn tuyệt đối đến file JSON trên ổ đĩa server
