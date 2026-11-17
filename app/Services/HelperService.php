@@ -201,28 +201,36 @@ class HelperService {
 
     public function getKokoatvLink(int $postId) {
         $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
-        $data = null;
         $jsonFilePath = public_path("outlink/json/post_{$postId}.json");
+        $data = null;
 
-        // 1. Gọi cURL tới server Render và LẤY NỘI DUNG trả về
-        if (!empty($outlink)) {
+        // Kiểm tra xem trên ổ đĩa Laravel đã có sẵn file JSON của bài viết này chưa
+        if (file_exists($jsonFilePath)) {
+            $jsonData = file_get_contents($jsonFilePath);
+            if ($jsonData !== false) {
+                $data = json_decode($jsonData, true);
+            }
+        }
+
+        // Nếu trên ổ đĩa Laravel chưa có file (hoặc file rỗng), tiến hành gọi cURL sang Render để lấy dữ liệu
+        if (empty($data) && !empty($outlink)) {
             $url = $outlink . '?key=123456&post_id=' . $postId;
             
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 20); // Tăng timeout lên 20s đề phòng Render bị cold start (ngủ đông)
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20); // Tăng timeout đề phòng Render bị ngủ đông (cold start)
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            // Nếu gọi thành công (HTTP 200) và có dữ liệu trả về từ Render
+            // Nếu Render trả về thành công (HTTP 200) và có nội dung
             if ($httpCode === 200 && !empty($response)) {
                 $decodedResponse = json_decode($response, true);
                 if (json_last_error() === JSON_ERROR_NONE && !empty($decodedResponse)) {
                     $data = $decodedResponse;
                     
-                    // Lưu lại cache JSON vào thư mục public của Laravel để dùng cho các lần sau
+                    // Laravel tự ghi file vào thư mục public của chính nó để các lần sau đọc luôn cho nhanh
                     $directory = dirname($jsonFilePath);
                     if (!is_dir($directory)) {
                         mkdir($directory, 0755, true);
@@ -232,15 +240,7 @@ class HelperService {
             }
         }
 
-        // 2. Nếu cURL lỗi hoặc server Render không phản hồi kịp, thử fallback đọc file cũ trên ổ đĩa
-        if (empty($data) && file_exists($jsonFilePath)) {
-            $jsonData = file_get_contents($jsonFilePath);
-            if ($jsonData !== false) {
-                $data = json_decode($jsonData, true);
-            }
-        } 
-
-        // 3. Nếu vẫn hoàn toàn trống, tạo dữ liệu mặc định để không bị lỗi giao diện
+        // Nếu vẫn không lấy được dữ liệu từ đâu ra, tạo dữ liệu mặc định để tránh lỗi giao diện
         if (empty($data)) {
             $data = [
                 'key' => 123456, 
@@ -255,7 +255,7 @@ class HelperService {
             file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
         }
 
-        // 4. Trả về kết quả
+        // Trả về kết quả dưới dạng object
         return is_array($data) ? (object)$data : $data;
     }
 
