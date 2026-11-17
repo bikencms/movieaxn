@@ -174,7 +174,7 @@ class EpisodeController extends Controller
                     'genres' => $genres,
                     'src' => $src,
                     'srcSet' => $srcSet,
-                    'outlink' => $outlink,
+                    'outlink' => "",
                     'postDateGmt' => $dataSeason->post_date_gmt,
                     'postDate' => $dataSeason->post_date,
                     'seasonName' => $seasonName,

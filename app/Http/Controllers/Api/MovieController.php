@@ -258,7 +258,7 @@ class MovieController extends Controller
 
             $movie = \get_object_vars($data) + ($metaData[$data->id] ?? []) + [
                 'genres' => $genres[$postId] ?? [],
-                'outlink' => $outlink,
+                'outlink' => "",
                 'relateds' => $movieRelateds,
                 'casts' => $casts
             ];
