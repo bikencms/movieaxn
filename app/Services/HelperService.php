@@ -201,75 +201,62 @@ class HelperService {
 
     public function getKokoatvLink(int $postId) {
         $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
-        // Kiểm tra xem biến có tồn tại và không rỗng không
+        $data = null;
+        $jsonFilePath = public_path("outlink/json/post_{$postId}.json");
+
+        // 1. Gọi cURL tới server Render và LẤY NỘI DUNG trả về
         if (!empty($outlink)) {
             $url = $outlink . '?key=123456&post_id=' . $postId;
             
-            // Khởi tạo cURL
             $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20); // Tăng timeout lên 20s đề phòng Render bị cold start (ngủ đông)
             
-            // Cấu hình các tùy chọn cho cURL
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Trả về kết quả thay vì in trực tiếp ra màn hình
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);          // Thời gian timeout (giây) để tránh bị treo request
-            
-            // Thực thi request
             $response = curl_exec($ch);
-            
-            // Đóng kết nối cURL
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
+
+            // Nếu gọi thành công (HTTP 200) và có dữ liệu trả về từ Render
+            if ($httpCode === 200 && !empty($response)) {
+                $decodedResponse = json_decode($response, true);
+                if (json_last_error() === JSON_ERROR_NONE && !empty($decodedResponse)) {
+                    $data = $decodedResponse;
+                    
+                    // Lưu lại cache JSON vào thư mục public của Laravel để dùng cho các lần sau
+                    $directory = dirname($jsonFilePath);
+                    if (!is_dir($directory)) {
+                        mkdir($directory, 0755, true);
+                    }
+                    file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
+                }
+            }
         }
 
-        // Đường dẫn tuyệt đối đến file JSON trên ổ đĩa server
-        $jsonFilePath = public_path("outlink/json/post_{$postId}.json");
-        $data = null;
-
-        if (file_exists($jsonFilePath)) {
-            // Đọc trực tiếp nội dung file JSON
+        // 2. Nếu cURL lỗi hoặc server Render không phản hồi kịp, thử fallback đọc file cũ trên ổ đĩa
+        if (empty($data) && file_exists($jsonFilePath)) {
             $jsonData = file_get_contents($jsonFilePath);
             if ($jsonData !== false) {
-                // Decode dạng mảng (associative array)
                 $data = json_decode($jsonData, true);
             }
         } 
 
-        // Nếu file chưa tồn tại hoặc đọc file bị lỗi / rỗng
+        // 3. Nếu vẫn hoàn toàn trống, tạo dữ liệu mặc định để không bị lỗi giao diện
         if (empty($data)) {
+            $data = [
+                'key' => 123456, 
+                'post_id' => $postId,
+                'status' => 'success'
+            ];
+            
             $directory = dirname($jsonFilePath);
             if (!is_dir($directory)) {
                 mkdir($directory, 0755, true);
             }
-            
-            // Tạo cấu trúc dữ liệu mặc định của bạn ở đây
-            $payloadArray = [
-                'key' => 123456, 
-                'post_id' => $postId,
-                'status' => 'success'
-                // Thêm các dữ liệu cần thiết khác vào đây nếu muốn query từ DB
-            ];
-            
-            $payloadJson = json_encode($payloadArray, JSON_UNESCAPED_UNICODE);
-            file_put_contents($jsonFilePath, $payloadJson);
-            
-            $data = $payloadArray;
+            file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
         }
 
-        // Trả về kết quả
-        if (!empty($data)) {
-            // Trả về trực tiếp mảng dưới dạng object hoặc json response tùy nhu cầu của bạn
-            return is_array($data) ? (object)$data : $data;
-        } else {
-            // Kích hoạt lại cảnh báo Telegram nếu hoàn toàn không lấy được dữ liệu
-            /*
-            $text = "Outlink json for post ID {$postId} not working";
-            Telegram::sendMessage([
-                'chat_id' => env('TELEGRAM_CHANNEL_ID', '5968853987'),
-                'parse_mode' => 'HTML',
-                'text' => $text
-            ]);
-            */
-            
-            return '';
-        }
+        // 4. Trả về kết quả
+        return is_array($data) ? (object)$data : $data;
     }
 
     public function clearCastDupplicate($items) {
