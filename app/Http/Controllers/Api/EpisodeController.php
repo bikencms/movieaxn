@@ -56,7 +56,6 @@ class EpisodeController extends Controller
             return response()->json(['status' => 'OK'], Response::HTTP_OK);
         }
         if( $watch != '' ) {
-            $this->helperService->getKokoatvLink($watch);
             $outLink = $this->helperService->getKokoatvLink($watch);
             if( isset($outLink->link) && $outLink->link != '' ) {
                 $item['watchLinks'] = $outLink->link;
