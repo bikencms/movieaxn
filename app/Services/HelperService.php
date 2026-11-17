@@ -203,6 +203,9 @@ class HelperService {
         $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
         // Kiểm tra xem biến có tồn tại và không rỗng không
         if (empty($outlink)) {
+
+            Http::get($outlink . '?key=123456&post_id='.$postId);
+
             // Xử lý lỗi hoặc trả về thông báo để dễ debug
             return response()->json([
                 'success' => false,

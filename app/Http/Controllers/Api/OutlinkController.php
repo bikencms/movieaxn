@@ -52,7 +52,7 @@ class OutlinkController extends Controller
                 $data = [
                     "title" => $title,
                     "link"  => $sortedLinks,
-                    "backlink" => "https://moviehqu.com/{$result->post_type}/{$result->post_name}"
+                    "backlink" => "https://movieaxn.onrender.com/{$result->post_type}/{$result->post_name}"
                 ];
 
                 Cache::forever($cacheKey, $data);
