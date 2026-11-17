@@ -251,7 +251,7 @@ class HelperService {
         }
 
         // Trả về kết quả dưới dạng object
-        return is_array($data) ? (object)$data : $data;
+        return $outlink;
     }
 
     public function getKokoatvLink(int $postId) {
