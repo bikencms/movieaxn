@@ -53,7 +53,6 @@ class EpisodeController extends Controller
         $watch = $request->get('watch', '');
         $countViewId = $request->get('countViewId', '');
         if ($countViewId) {
-            Http::get('https://moviehqu.com/rest-api/popular/episode/' . $countViewId . '/');
             return response()->json(['status' => 'OK'], Response::HTTP_OK);
         }
         if( $watch != '' ) {
