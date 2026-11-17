@@ -194,24 +194,124 @@ class HelperService {
         return true;
     }
 
-   public function getOutLink() {
-        $outlink = env('OUTLINK', '');
-        $response = Http::get($outlink);
-        if( $response->ok() ) {
-            return $response;
-        } else {
-            return '';
+   public function getOutLink(int $postId) {
+        $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
+        $jsonFilePath = public_path("outlink/json/post_{$postId}.json");
+        $data = null;
+
+        // Kiểm tra xem trên ổ đĩa Laravel đã có sẵn file JSON của bài viết này chưa
+        if (file_exists($jsonFilePath)) {
+            $jsonData = file_get_contents($jsonFilePath);
+            if ($jsonData !== false) {
+                $data = json_decode($jsonData, true);
+            }
         }
+
+        // Nếu trên ổ đĩa Laravel chưa có file (hoặc file rỗng), tiến hành gọi cURL sang Render để lấy dữ liệu
+        if (empty($data) && !empty($outlink)) {
+            $url = $outlink . '?key=123456&post_id=' . $postId;
+            
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20); // Tăng timeout đề phòng Render bị ngủ đông (cold start)
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            // Nếu Render trả về thành công (HTTP 200) và có nội dung
+            if ($httpCode === 200 && !empty($response)) {
+                $decodedResponse = json_decode($response, true);
+                if (json_last_error() === JSON_ERROR_NONE && !empty($decodedResponse)) {
+                    $data = $decodedResponse;
+                    
+                    // Laravel tự ghi file vào thư mục public của chính nó để các lần sau đọc luôn cho nhanh
+                    $directory = dirname($jsonFilePath);
+                    if (!is_dir($directory)) {
+                        mkdir($directory, 0755, true);
+                    }
+                    file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
+                }
+            }
+        }
+
+        // Nếu vẫn không lấy được dữ liệu từ đâu ra, tạo dữ liệu mặc định để tránh lỗi giao diện
+        if (empty($data)) {
+            $data = [
+                'key' => 123456, 
+                'post_id' => $postId,
+                'status' => 'success'
+            ];
+            
+            $directory = dirname($jsonFilePath);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
+        }
+
+        // Trả về kết quả dưới dạng object
+        return is_array($data) ? (object)$data : $data;
     }
 
     public function getKokoatvLink(int $postId) {
-        $outlink = env('OUTLINKSTEP2', '');
-        $response = Http::get($outlink, [ 'key' => 123456, 'post_id' => $postId ]);
-        if( $response->ok() ) {
-            return json_decode($response);
-        } else {
-            return '';
+        $outlink = env('OUTLINKSTEP2', 'https://movieaxn.onrender.com/outlink/outlink.php');
+        $jsonFilePath = public_path("outlink/json/post_{$postId}.json");
+        $data = null;
+
+        // Kiểm tra xem trên ổ đĩa Laravel đã có sẵn file JSON của bài viết này chưa
+        if (file_exists($jsonFilePath)) {
+            $jsonData = file_get_contents($jsonFilePath);
+            if ($jsonData !== false) {
+                $data = json_decode($jsonData, true);
+            }
         }
+
+        // Nếu trên ổ đĩa Laravel chưa có file (hoặc file rỗng), tiến hành gọi cURL sang Render để lấy dữ liệu
+        if (empty($data) && !empty($outlink)) {
+            $url = $outlink . '?key=123456&post_id=' . $postId;
+            
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20); // Tăng timeout đề phòng Render bị ngủ đông (cold start)
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            // Nếu Render trả về thành công (HTTP 200) và có nội dung
+            if ($httpCode === 200 && !empty($response)) {
+                $decodedResponse = json_decode($response, true);
+                if (json_last_error() === JSON_ERROR_NONE && !empty($decodedResponse)) {
+                    $data = $decodedResponse;
+                    
+                    // Laravel tự ghi file vào thư mục public của chính nó để các lần sau đọc luôn cho nhanh
+                    $directory = dirname($jsonFilePath);
+                    if (!is_dir($directory)) {
+                        mkdir($directory, 0755, true);
+                    }
+                    file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
+                }
+            }
+        }
+
+        // Nếu vẫn không lấy được dữ liệu từ đâu ra, tạo dữ liệu mặc định để tránh lỗi giao diện
+        if (empty($data)) {
+            $data = [
+                'key' => 123456, 
+                'post_id' => $postId,
+                'status' => 'success'
+            ];
+            
+            $directory = dirname($jsonFilePath);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            file_put_contents($jsonFilePath, json_encode($data, JSON_UNESCAPED_UNICODE));
+        }
+
+        // Trả về kết quả dưới dạng object
+        return is_array($data) ? (object)$data : $data;
     }
 
     public function clearCastDupplicate($items) {

@@ -134,7 +134,7 @@ class EpisodeController extends Controller
                     ];
                 }
                 //outlink only show in into
-                $outLink = $this->helperService->getOutLink();
+                $outLink = $this->helperService->getOutLink($tvShowId);
                 if ( $outLink != '' ) {
                     $outlink =  $outLink . '?pid=' . $dataSeason->ID;
                 } else {

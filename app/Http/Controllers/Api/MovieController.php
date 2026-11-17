@@ -234,8 +234,7 @@ class MovieController extends Controller
             $genres = $this->movieService->getMoviesGenres([$postId]);
             $genreSlugs = empty($genres) ? [] : \array_map((fn($genre) => $genre['slug']), $genres[$postId]);
             
-
-            $outLink = $this->helperService->getOutLink();
+            $outLink = $this->helperService->getOutLink($postId);
             if ( $outLink != '' ) {
                 $outlink =  $outLink . '?pid=' . $data->id;
             } else {
