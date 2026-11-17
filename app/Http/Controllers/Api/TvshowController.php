@@ -16,7 +16,7 @@ class TvshowController extends Controller
     protected $helperService;
     public function __construct(TvshowService $tvshowService, HelperService $helperService)
     {
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', '/uploads/');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', 'https://movie.ibear.vn/');
         $this->tvshowService = $tvshowService;
         $this->helperService = $helperService;
     }

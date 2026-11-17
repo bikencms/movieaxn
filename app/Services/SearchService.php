@@ -175,7 +175,7 @@ class SearchService {
         $items = [];
         $dataItems = DB::select($query);
         $releaseDate = date('Y-M-D');
-        $imageUrlUpload = env('IMAGE_URL_UPLOAD');
+        $imageUrlUpload = env('IMAGE_URL_UPLOAD', 'https://movie.ibear.vn/');
         $link = '';
         $srcSet = [];
         $src= '';

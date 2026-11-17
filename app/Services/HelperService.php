@@ -12,7 +12,7 @@ class HelperService {
     protected $imageUrlUpload;
     public function __construct()
     {
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', 'https://movie.ibear.vn/');
     }
 
     public function getSliderItems($query='')

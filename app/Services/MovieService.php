@@ -13,7 +13,7 @@ class MovieService {
     public function __construct(HelperService $helperService)
     {
         $this->helperService = $helperService;        
-        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD');
+        $this->imageUrlUpload = env('IMAGE_URL_UPLOAD', 'https://movie.ibear.vn/');
     }
 
     public function getTopWeeks()
@@ -40,7 +40,7 @@ class MovieService {
         $items = [];
         $dataItems = DB::select($query);
         $releaseDate = '';
-        $imageUrlUpload = env('IMAGE_URL_UPLOAD');
+        $imageUrlUpload = env('IMAGE_URL_UPLOAD', 'https://movie.ibear.vn/');
         $movieRunTime = '';
         $outlink = '';
         $srcSet = [];
